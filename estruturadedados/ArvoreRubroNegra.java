@@ -121,7 +121,7 @@ public class ArvoreRubroNegra {
      * @param pai
      * @return 
      */
-    public Node criarNo(int chave, Node pai) {
+    private Node criarNo(int chave, Node pai) {
         Node no = new Node();
         no.chave = chave;
         no.pai = pai;
@@ -168,7 +168,7 @@ public class ArvoreRubroNegra {
      * devido a exclusão de um nó.
      * @param x
      */
-    public void consertarDelete(Node x) {
+    private void consertarDelete(Node x) {
         Node w = null;
         while (x != raiz && x.cor.equals(Cor.Negro)) {
             if (x == x.pai.esq) {
@@ -217,7 +217,7 @@ public class ArvoreRubroNegra {
      * @param u
      * @param v
      */
-    public void transplantar(Node u, Node v) {
+    private void transplantar(Node u, Node v) {
         if (u.pai == null) {
             raiz = v;
         } else if (u == u.pai.esq) {
