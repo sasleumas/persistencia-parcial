@@ -3,12 +3,18 @@ package estruturadedados;
 public class ArvoreRubroNegra {
     Node raiz = null;
     int quantidade = 0;
-    
+    int versaoAtual = 0;
+    //Mantém uma lista com os nós modificados na última inserção ou remoção
+    // para atualização dos mods da versão de cada nó. 
+    //private HashSet<Node> nosModificados = new HashSet<>();
+
     public void inserir(int chave) {
-        //int prof = 0;
+        versaoAtual++;
+        //nosModificados.clear();
         Node z = criarNo(chave, null);
         Node x = raiz;
         Node y = x;
+        //Procura o local (o pai) onde o novo nó será inserido.
         while (x != null) {
             y = x;//a última atribuição a "y" no laço determina o pai do novo nó
             if (z.chave < x.chave) {
@@ -16,40 +22,89 @@ public class ArvoreRubroNegra {
             } else {
                 x = x.dir;
             }
-            //prof++;
         }
         z.pai = y;
         if (y == null) {
             raiz = z;
         } else if (z.chave < y.chave) {
             y.esq = z;
+            configurarVersao(y);
+            //nosModificados.add(y);
         } else {
             y.dir = z;
+            configurarVersao(y);
+            //nosModificados.add(y);
         }
         z.cor = Cor.Rubro;
-        //System.out.println("Profundidade: " + prof);
+        configurarVersao(z);
+        //nosModificados.add(z);
         consertarInsert(z);
         quantidade++;
     }
 
+    private void configurarVersao(Node n) {
+        Node novoNo = n;
+        boolean adicionou = n.adicionarMod(versaoAtual); 
+        //Chegou no limite dos mods
+        //Cria nova estrutura para o nó e atualiza as 
+        // referências a ele.
+        if (!adicionou) {
+            novoNo = new Node(n);
+            novoNo.versaoAnterior = n;
+            if (n == raiz) {
+                raiz = novoNo;
+            }
+            if(n.dir != null) {
+                n.dir.pai = novoNo;
+            }
+            if (n.esq != null) {
+                n.esq.pai = novoNo;
+            }
+            if (n.pai != null) {
+                if (n.pai.esq == n) {
+                    n.pai.esq = novoNo;
+                } else {
+                    n.pai.dir = novoNo;
+                }
+            }
+            novoNo.adicionarMod(versaoAtual);
+            n = novoNo;
+        }
+    }
+
+    /**
+     * Faz as rotações e mudanças de cor necessárias para 
+     * preservar as características da árvore rubro negra.
+     * @param z
+     */
     private void consertarInsert(Node z) {
         while (z.pai != null && z.pai.cor.equals(Cor.Rubro)) {
             if (z.pai == z.pai.pai.esq) {
                 Node y = z.pai.pai.dir;
                 //Se o irmão do pai é rubro ou não existe, 
-                // o pai e o irmão (se existir) podem ser mudados para negros 
+                // o pai e o tio (se existir) podem ser mudados para negros 
                 if (y == null || y.cor.equals(Cor.Rubro)) {
                     z.pai.cor = Cor.Negro;
+                    configurarVersao(z.pai);
+                    //nosModificados.add(z.pai);
                     if (y != null) {
                         y.cor = Cor.Negro;
+                        configurarVersao(y);
+                        //nosModificados.add(y);
                     }
                     z.pai.pai.cor = Cor.Rubro;
+                    configurarVersao(z.pai.pai);
+                    //nosModificados.add(z.pai.pai);
                     z = z.pai.pai;
                 } else if (z == z.pai.dir) {
                     z = z.pai;                    
                     rotacionarAEsquerda(z);
                     z.pai.cor = Cor.Negro;
                     z.pai.pai.cor = Cor.Rubro;
+                    configurarVersao(z.pai);
+                    configurarVersao(z.pai.pai);
+                    //nosModificados.add(z.pai);
+                    //nosModificados.add(z.pai.pai);                        
                     rotacionarADireita(z.pai.pai);
                 }
             } else {// faz do outro lado da árvore (de forma inversa).
@@ -58,21 +113,32 @@ public class ArvoreRubroNegra {
                 // o pai e o irmão (se existir) podem ser mudados para negros
                 if (y == null || y.cor.equals(Cor.Rubro)) {
                     z.pai.cor = Cor.Negro;
+                    configurarVersao(z.pai);
+                    //nosModificados.add(z.pai);
                     if (y != null) {
                         y.cor = Cor.Negro;
+                        configurarVersao(y);
+                        //nosModificados.add(y);
                     }
                     z.pai.pai.cor = Cor.Rubro;
+                    configurarVersao(z.pai.pai);
+                    //nosModificados.add(z.pai.pai);
                     z = z.pai.pai;
                 } else if (z == z.pai.esq) {
                     z = z.pai;
                     rotacionarADireita(z);
                     z.pai.cor = Cor.Negro;
                     z.pai.pai.cor = Cor.Rubro;
+                    configurarVersao(z.pai);
+                    configurarVersao(z.pai.pai);
+                    //nosModificados.add(z.pai);
+                    //nosModificados.add(z.pai.pai);
                     rotacionarAEsquerda(z.pai.pai);
                 }
             }
         }
         raiz.cor = Cor.Negro;
+        configurarVersao(raiz);
     }
 
     private void rotacionarAEsquerda(Node x) {
@@ -82,11 +148,17 @@ public class ArvoreRubroNegra {
         //se a esquerda de y não é nula, terá x como pai
         if (y.esq != null) {
             y.esq.pai = x;
+            configurarVersao(y.esq);
+            //nosModificados.add(y.esq);
         }
         y.pai = x.pai;
         organizarFilhosDaRotacao(x, y);
         y.esq = x; // x ficará a esquerda de y.
         x.pai = y; // y é o novo pai de x.
+        configurarVersao(x);
+        configurarVersao(y);
+        //nosModificados.add(x);
+        //nosModificados.add(y);
     }
     
     private void rotacionarADireita(Node x) {
@@ -96,11 +168,17 @@ public class ArvoreRubroNegra {
         //se a direita de y não é nula, terá x como pai
         if (y.dir != null) {
             y.dir.pai = x;
+            configurarVersao(y.dir);
+            //nosModificados.add(y.dir);
         }
         y.pai = x.pai;
         organizarFilhosDaRotacao(x, y);
         y.dir = x; // x ficará a direita de y.
         x.pai = y; // y é o novo pai de x.
+        configurarVersao(x);
+        configurarVersao(y);
+        //nosModificados.add(x);
+        //nosModificados.add(y);
     }
     
     private void organizarFilhosDaRotacao(Node x, Node y) {
@@ -109,8 +187,12 @@ public class ArvoreRubroNegra {
             raiz = y;
         } else if (x == x.pai.esq) {
             x.pai.esq = y;
+            configurarVersao(x.pai);
+            //nosModificados.add(x.pai);
         } else {
             x.pai.dir = y;
+            configurarVersao(x.pai);
+            //nosModificados.add(x.pai);
         }
     }
 
@@ -129,9 +211,11 @@ public class ArvoreRubroNegra {
     }
     
     public void remover(int chave) {
+        //nosModificados.clear();        
         Node z = buscar(chave);
         if (z == null)
             return;
+        versaoAtual++;
         Node y = z;
         Node x = null;
         Cor corOriginal = y.cor;
@@ -147,15 +231,20 @@ public class ArvoreRubroNegra {
             x = y.dir;//Guarda para consertar a árvore a partir desse nó.
             if (y.pai == z) {
                 x.pai = y; //???
+                configurarVersao(x);
             } else {
                 transplantar(y, y.dir);
                 y.dir = z.dir;
                 y.dir.pai = y;
+                configurarVersao(y);
+                configurarVersao(y.dir);
             }
             transplantar(z, y);
             y.esq = z.esq;
             y.esq.pai = y;
             y.cor = z.cor;
+            configurarVersao(y);
+            configurarVersao(y.esq);
         }
         if (x != null && corOriginal.equals(Cor.Negro)) {
             consertarDelete(x);
@@ -175,15 +264,18 @@ public class ArvoreRubroNegra {
                 w = x.pai.dir;
                 if (w.cor.equals(Cor.Rubro)) {
                     w.cor = Cor.Negro;
+                    configurarVersao(w);
                     x.pai.cor = Cor.Rubro;
                     rotacionarAEsquerda(x.pai);
                     w = x.pai.dir;
                 }
                 if (w.esq.cor.equals(Cor.Negro) && w.dir.cor.equals(Cor.Negro)) {
                     w.cor = Cor.Rubro;
+                    configurarVersao(w);
                     x = x.pai;
                 } else if (w.dir.cor.equals(Cor.Negro)) {
                     w.esq.cor = Cor.Negro;
+                    configurarVersao(w.esq);
                     w.cor = Cor.Rubro;
                     rotacionarADireita(w);
                     w = x.pai.dir;
@@ -192,15 +284,18 @@ public class ArvoreRubroNegra {
                 w = x.pai.esq;
                 if (w.cor.equals(Cor.Rubro)) {
                     w.cor = Cor.Negro;
+                    configurarVersao(w);
                     x.pai.cor = Cor.Rubro;
                     rotacionarADireita(x.pai);
                     w = x.pai.esq;
                 }
                 if (w.dir.cor.equals(Cor.Negro) && w.esq.cor.equals(Cor.Negro)) {
                     w.cor = Cor.Rubro;
+                    configurarVersao(w);
                     x = x.pai;
                 } else if (w.esq.cor.equals(Cor.Negro)) {
                     w.dir.cor = Cor.Negro;
+                    configurarVersao(w.dir);
                     w.cor = Cor.Rubro;
                     rotacionarAEsquerda(w);
                     w = x.pai.esq;
@@ -208,6 +303,7 @@ public class ArvoreRubroNegra {
             }
         }
         x.cor = Cor.Negro;
+        configurarVersao(x);
     }
 
     /**
@@ -222,11 +318,14 @@ public class ArvoreRubroNegra {
             raiz = v;
         } else if (u == u.pai.esq) {
             u.pai.esq = v;
+            configurarVersao(u.pai);
         } else {
             u.pai.dir = v;
+            configurarVersao(u.pai);
         }
         if (v != null) {
             v.pai = u.pai;
+            configurarVersao(v);
         }
     }
 
@@ -296,11 +395,63 @@ public class ArvoreRubroNegra {
         }
     }
 
-    public void imprimirInOrdem(Node no) {
+    public void imprimirEmOrdem(Node no) {
         if(no != null) {
-            imprimirInOrdem(no.esq);
-            System.out.print(no.chave + " ");
-            imprimirInOrdem(no.dir);
+            if (no.pai != null) {
+                no.profundidade = no.pai.profundidade + 1;
+            }
+            imprimirEmOrdem(no.esq);
+            System.out.print(no.chave + "," + no.profundidade + "," + no.cor.name().charAt(0) + " ");
+            imprimirEmOrdem(no.dir);
         }
+    }
+
+    public void imprimirEmOrdem(int versao, Node no) {
+        if(no != null) {
+            no = pegarVersao(versao, no);
+            if (no.pai != null) {
+                no.profundidade = no.pai.profundidade + 1;
+            }
+            imprimirEmOrdem(no.esq);
+            System.out.print(no.chave + "," + no.profundidade + "," + no.cor.name().charAt(0) + " ");
+            imprimirEmOrdem(no.dir);
+        }
+    }
+
+    public void imprimirEmOrdemComVersoes(Node no) {
+        if(no != null) {
+            if (no.pai != null) {
+                no.profundidade = no.pai.profundidade + 1;
+            }
+            imprimirEmOrdemComVersoes(no.esq);
+            System.out.print(no.chave + "," + no.profundidade + "," + no.cor.name().charAt(0) + "\n");
+            for(Mod m : no.mods) {
+                if (m == null)
+                    break;
+                System.out.printf("%dv,%dch,%sc,%sp,%se,%sd\n", 
+                    m.versao, 
+                    m.noNaVersao.chave, 
+                    m.noNaVersao.cor.name().charAt(0), 
+                    m.noNaVersao.pai, 
+                    m.noNaVersao.esq, 
+                    m.noNaVersao.dir);
+            }
+            System.out.println();
+            imprimirEmOrdemComVersoes(no.dir);
+        }
+    }
+
+    public Node pegarVersao(int versao, Node no) {
+        Node noDaVersao = null;
+        for(int i = no.mods.length - 1; i >= 0; i--) {
+            if (no.mods[i] != null && versao >= no.mods[i].versao) {
+                no = no.mods[i].noNaVersao;
+                break;
+            }
+        }
+        if (noDaVersao == null && no.versaoAnterior != null) {
+            noDaVersao = pegarVersao(versao, no.versaoAnterior);
+        }
+        return noDaVersao;
     }
 }
