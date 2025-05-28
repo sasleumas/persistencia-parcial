@@ -15,13 +15,19 @@ public class Node {
     public Node() {}
 
     public Node(Node no) {
-        pai = no.pai;
-        esq = no.esq;
-        dir = no.dir;
-        chave = no.chave;
-        cor = no.cor;
+        this.pai = no.pai;
+        this.esq = no.esq;
+        this.dir = no.dir;
+        this.chave = no.chave;
+        this.cor = no.cor;
     }
 
+    /**
+     * Adiciona uma nova modificação da versão no nó.
+     * @param versao
+     * @return true, se houve alteração e se foi possível adicionar o mod.
+     *  fase, caso houve alteração e não foi possível adicionar o mod.
+     */
     boolean adicionarMod(int versao) {
         for(int i = 0; i < mods.length; i++) {
             if (mods[i] != null && mods[i].versao == versao) {
@@ -31,9 +37,9 @@ public class Node {
                 boolean configura = true;
                 if (i > 0) {
                     Node anterior = mods[i-1].noNaVersao;
-                    if (anterior.esq == this.esq &&
-                        anterior.dir == this.dir &&
-                        anterior.pai == this.pai &&
+                    if (ehMesmaChave(anterior.esq, this.esq) &&
+                        ehMesmaChave(anterior.dir, this.dir) &&
+                        ehMesmaChave(anterior.pai, this.pai) &&
                         anterior.cor.ordinal() == this.cor.ordinal()) {
                         configura = false;
                     }
@@ -45,7 +51,20 @@ public class Node {
                 return true;
             }
         }
+        //Se chegou aqui, não há mais espaço para inserir modificação.
+        //Verifica se houve modificação que justifique necessidade de informar estouro. 
+        Node ultima = mods[mods.length-1].noNaVersao;
+        if (ehMesmaChave(ultima.esq, this.esq) &&
+            ehMesmaChave(ultima.dir, this.dir) &&
+            ehMesmaChave(ultima.pai, this.pai) &&
+            ultima.cor.ordinal() == this.cor.ordinal()) {
+            return true;
+        }
         return false;
+    }
+
+    private boolean ehMesmaChave(Node n1, Node n2) {
+        return n1 != null && n2 != null && n1.chave == n2.chave;
     }
 
     @Override
@@ -55,7 +74,9 @@ public class Node {
 
     @Override
     public boolean equals(Object obj) {
-        return super.equals(obj);
+        Node other = ((Node)obj);
+        return obj != null 
+        && this.chave == other.chave;
     }
 }
 

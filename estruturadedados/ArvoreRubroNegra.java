@@ -1,5 +1,7 @@
 package estruturadedados;
 
+import java.util.HashMap;
+
 public class ArvoreRubroNegra {
     Node raiz = null;
     int quantidade = 0;
@@ -8,8 +10,11 @@ public class ArvoreRubroNegra {
     // para atualização dos mods da versão de cada nó. 
     //private HashSet<Node> nosModificados = new HashSet<>();
 
+    HashMap<Integer, Node> raizesDasVersoes = new HashMap<>();
+
     public void inserir(int chave) {
         versaoAtual++;
+ 
         //nosModificados.clear();
         Node z = criarNo(chave, null);
         Node x = raiz;
@@ -40,36 +45,7 @@ public class ArvoreRubroNegra {
         //nosModificados.add(z);
         consertarInsert(z);
         quantidade++;
-    }
-
-    private void configurarVersao(Node n) {
-        Node novoNo = n;
-        boolean adicionou = n.adicionarMod(versaoAtual); 
-        //Chegou no limite dos mods
-        //Cria nova estrutura para o nó e atualiza as 
-        // referências a ele.
-        if (!adicionou) {
-            novoNo = new Node(n);
-            novoNo.versaoAnterior = n;
-            if (n == raiz) {
-                raiz = novoNo;
-            }
-            if(n.dir != null) {
-                n.dir.pai = novoNo;
-            }
-            if (n.esq != null) {
-                n.esq.pai = novoNo;
-            }
-            if (n.pai != null) {
-                if (n.pai.esq == n) {
-                    n.pai.esq = novoNo;
-                } else {
-                    n.pai.dir = novoNo;
-                }
-            }
-            novoNo.adicionarMod(versaoAtual);
-            n = novoNo;
-        }
+        raizesDasVersoes.put(versaoAtual, raiz);
     }
 
     /**
@@ -240,6 +216,7 @@ public class ArvoreRubroNegra {
                 configurarVersao(y.dir);
             }
             transplantar(z, y);
+
             y.esq = z.esq;
             y.esq.pai = y;
             y.cor = z.cor;
@@ -250,6 +227,7 @@ public class ArvoreRubroNegra {
             consertarDelete(x);
         }
         quantidade--;
+        raizesDasVersoes.put(versaoAtual, raiz);
     }
 
     /**
@@ -266,6 +244,7 @@ public class ArvoreRubroNegra {
                     w.cor = Cor.Negro;
                     configurarVersao(w);
                     x.pai.cor = Cor.Rubro;
+                    configurarVersao(x.pai);
                     rotacionarAEsquerda(x.pai);
                     w = x.pai.dir;
                 }
@@ -277,6 +256,7 @@ public class ArvoreRubroNegra {
                     w.esq.cor = Cor.Negro;
                     configurarVersao(w.esq);
                     w.cor = Cor.Rubro;
+                    configurarVersao(w);
                     rotacionarADireita(w);
                     w = x.pai.dir;
                 }
@@ -286,6 +266,7 @@ public class ArvoreRubroNegra {
                     w.cor = Cor.Negro;
                     configurarVersao(w);
                     x.pai.cor = Cor.Rubro;
+                    configurarVersao(x.pai);
                     rotacionarADireita(x.pai);
                     w = x.pai.esq;
                 }
@@ -297,6 +278,7 @@ public class ArvoreRubroNegra {
                     w.dir.cor = Cor.Negro;
                     configurarVersao(w.dir);
                     w.cor = Cor.Rubro;
+                    configurarVersao(w);
                     rotacionarAEsquerda(w);
                     w = x.pai.esq;
                 }
@@ -329,6 +311,36 @@ public class ArvoreRubroNegra {
         }
     }
 
+    private void configurarVersao(Node n) {
+        Node novoNo = n;
+        boolean adicionou = n.adicionarMod(versaoAtual); 
+        //Chegou no limite dos mods
+        //Cria nova estrutura para o nó e atualiza as 
+        // referências a ele.
+        if (!adicionou) {
+            novoNo = new Node(n);
+            novoNo.versaoAnterior = n;
+            if (n == raiz) {
+                raiz = novoNo;
+            }
+            if(n.dir != null) {
+                novoNo.dir.pai = novoNo;
+            }
+            if (n.esq != null) {
+                novoNo.esq.pai = novoNo;
+            }
+            if (n.pai != null) {
+                if (n.pai.esq == n) {
+                    novoNo.pai.esq = novoNo;
+                } else {
+                    novoNo.pai.dir = novoNo;
+                }
+            }
+            novoNo.adicionarMod(versaoAtual);
+            n = novoNo;
+        }
+    }
+
     /**
      * Procura pelo elemento de menor chave na subárvore em que "no" é a raiz
      * @param no
@@ -354,7 +366,24 @@ public class ArvoreRubroNegra {
         return max;
     }
 
-    public Node buscarSucessor(int chave) {
+    public Node buscarMaximoNaSubArvore(int versao, Node no) {
+        if (no == null)
+            return null;
+        Node max = no;
+            /*Node max = pegarVersao(versao, no);
+        if (max == null)
+            return null;*/
+        Node max_dir = pegarVersao(versao, max.dir);
+        while (max_dir != null) {
+            max = max_dir;
+            if (max != null) {
+                max_dir = pegarVersao(versao, max.dir);
+            }
+        }
+        return max;
+    }
+
+    public String buscarSucessor(int chave) {
         Node x = raiz;
         Node suc = null;
         while (suc == null && x != null) {
@@ -369,7 +398,42 @@ public class ArvoreRubroNegra {
                 x = x.dir;
             }
         }
-        return suc;
+        String retorno = "";
+        if (suc == null) {
+            retorno = "INFINITO";
+        } else {
+            retorno = suc.chave + ""; 
+        }
+        return retorno;
+    }
+
+    public String buscarSucessor(int versao, int chave) {
+        if (versao > versaoAtual) {
+            versao = versaoAtual;
+        }
+        Node x = raizesDasVersoes.get(versao);
+        x = pegarVersao(versao, x);
+        Node suc = null;
+        while (suc == null && x != null) {
+            Node esq = pegarVersao(versao, x.esq);
+            Node y = buscarMaximoNaSubArvore(versao, esq);
+            if (y != null && y.chave > chave) {
+                //Caminha na subárvore à esquerda.
+                x = esq;
+            } else if (x.chave > chave) {
+                suc = x;
+            } else {
+                //Caminha na subárvore à direita.
+                x = pegarVersao(versao, x.dir);
+            }
+        }
+        String retorno = "";
+        if (suc == null) {
+            retorno = "INFINITO";
+        } else {
+            retorno = suc.chave + ""; 
+        }
+        return retorno;
     }
 
     public Node buscar(int chave) {
@@ -386,36 +450,69 @@ public class ArvoreRubroNegra {
         return x;
     }
 
-    public void imprimirPreOrdem(Node no) {
+    public String imprimirPreOrdem(Node no) {
+        String s = "";
         if(no != null) {
-            System.out.print("(" + no.chave + no.cor.name().toLowerCase().charAt(0));
-            imprimirPreOrdem(no.esq);
-            imprimirPreOrdem(no.dir);
-            System.out.print(")");
+            s += ("(" + no.chave + no.cor.name().toLowerCase().charAt(0));
+            s += imprimirPreOrdem(no.esq);
+            s += imprimirPreOrdem(no.dir);
+            s += (")");
         }
+        return s;
     }
 
-    public void imprimirEmOrdem(Node no) {
+    public String imprimirEmOrdem(Node no) {
+        return imprimirEmOrdem(no, 0);
+    }    
+
+    private String imprimirEmOrdem(Node no, int prof) {
+        String s = "";
         if(no != null) {
-            if (no.pai != null) {
-                no.profundidade = no.pai.profundidade + 1;
+            if (no.pai == null) {
+                no.profundidade = 0;
+                prof = 0;
+            } else {
+                prof++;
+                no.profundidade = prof;
             }
-            imprimirEmOrdem(no.esq);
-            System.out.print(no.chave + "," + no.profundidade + "," + no.cor.name().charAt(0) + " ");
-            imprimirEmOrdem(no.dir);
+            s += imprimirEmOrdem(no.esq, prof);
+            s += (no.chave + "," + no.profundidade + "," + no.cor.name().charAt(0) + " ");
+            s += imprimirEmOrdem(no.dir, prof);
         }
+        return s;
     }
 
-    public void imprimirEmOrdem(int versao, Node no) {
-        if(no != null) {
-            no = pegarVersao(versao, no);
-            if (no.pai != null) {
-                no.profundidade = no.pai.profundidade + 1;
-            }
-            imprimirEmOrdem(no.esq);
-            System.out.print(no.chave + "," + no.profundidade + "," + no.cor.name().charAt(0) + " ");
-            imprimirEmOrdem(no.dir);
+    public String imprimirEmOrdem(int versao) {
+        Node raizDaVersao = null;
+        if (versao < 1) {
+            return "";
+        } else if (versao > versaoAtual) {
+            raizDaVersao = raiz;
+        } else {
+            raizDaVersao = raizesDasVersoes.get(versao);
+            raizDaVersao = pegarVersao(versao, raizDaVersao);
         }
+        return imprimirEmOrdem(versao, raizDaVersao, 0);
+    }
+
+    private String imprimirEmOrdem(int versao, Node no, int prof) {
+        String s = "";
+        if(no != null) {
+            Node pai = pegarVersao(versao, no.pai);
+            if (pai == null) {
+                no.profundidade = 0;
+                prof = 0;
+            } else {
+                prof++;
+                no.profundidade = prof;
+            }
+            Node esq = pegarVersao(versao, no.esq);
+            s += imprimirEmOrdem(versao, esq, prof);
+            s += (no.chave + "," + no.profundidade + "," + no.cor.name().charAt(0) + " ");
+            Node dir = pegarVersao(versao, no.dir);
+            s += imprimirEmOrdem(versao, dir, prof);
+        }
+        return s;
     }
 
     public void imprimirEmOrdemComVersoes(Node no) {
@@ -425,32 +522,43 @@ public class ArvoreRubroNegra {
             }
             imprimirEmOrdemComVersoes(no.esq);
             System.out.print(no.chave + "," + no.profundidade + "," + no.cor.name().charAt(0) + "\n");
-            for(Mod m : no.mods) {
-                if (m == null)
-                    break;
-                System.out.printf("%dv,%dch,%sc,%sp,%se,%sd\n", 
-                    m.versao, 
-                    m.noNaVersao.chave, 
-                    m.noNaVersao.cor.name().charAt(0), 
-                    m.noNaVersao.pai, 
-                    m.noNaVersao.esq, 
-                    m.noNaVersao.dir);
+            imprimirMods(no);
+            Node versaoAnterior = no.versaoAnterior;
+            while (versaoAnterior != null) {
+                System.out.println("Versão anterior:");
+                imprimirMods(no.versaoAnterior);
+                versaoAnterior = versaoAnterior.versaoAnterior;
             }
             System.out.println();
             imprimirEmOrdemComVersoes(no.dir);
         }
     }
 
-    public Node pegarVersao(int versao, Node no) {
-        Node noDaVersao = null;
-        for(int i = no.mods.length - 1; i >= 0; i--) {
-            if (no.mods[i] != null && versao >= no.mods[i].versao) {
-                no = no.mods[i].noNaVersao;
+    private void imprimirMods(Node no) {
+        for(Mod m : no.mods) {
+            if (m == null)
                 break;
-            }
+            System.out.printf("%dv,%dch,%sc,%sp,%se,%sd\n", 
+                m.versao, 
+                m.noNaVersao.chave, 
+                m.noNaVersao.cor.name().charAt(0), 
+                m.noNaVersao.pai, 
+                m.noNaVersao.esq, 
+                m.noNaVersao.dir);
         }
-        if (noDaVersao == null && no.versaoAnterior != null) {
-            noDaVersao = pegarVersao(versao, no.versaoAnterior);
+    }
+
+    public Node pegarVersao(int versao, Node no) {
+        Node noVerificar = no;
+        Node noDaVersao = null;
+        while (noVerificar != null && noDaVersao == null) {
+            for(int i = noVerificar.mods.length - 1; i >= 0; i--) {
+                if (noVerificar.mods[i] != null && versao >= noVerificar.mods[i].versao) {
+                    noDaVersao = noVerificar.mods[i].noNaVersao;
+                    break;
+                }
+            }
+            noVerificar = noVerificar.versaoAnterior;
         }
         return noDaVersao;
     }
