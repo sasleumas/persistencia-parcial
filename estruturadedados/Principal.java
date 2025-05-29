@@ -16,13 +16,15 @@ public class Principal {
         int [] novasChaves = {9, -5, 11, 2, 14, 1, 12, 7, 15, 5, 0, 8, 4, 16, 90, 3, 13, 2, 1000};
         System.out.println("Sucessores de cada chave em cada versão");
         testarSucessorDaVersao(a, novasChaves);
+
         //System.out.println("Impressão de modificações.");
         //a.imprimirEmOrdemComVersoes(a.raiz);
 
+        System.out.println("Remoção na ordem inversa da inserção");
+        testarRemocao(a, chaves);
     }
 
-    public static void testarInsercao(ArvoreRubroNegra a, 
-        int[] chaves) {        
+    public static void testarInsercao(ArvoreRubroNegra a, int[] chaves) {        
         for(int i = 0; i < chaves.length; i++) {
             a.inserir(chaves[i]);
             String s = a.imprimirPreOrdem(a.raiz);
@@ -59,30 +61,6 @@ public class Principal {
         }
     }
 
-    public static void testarInsercaoSucessorERemocao(ArvoreRubroNegra a, int[] chaves) {
-        String s = a.buscarSucessor(10);
-        System.out.println("Sucessor de 10: " + s);
-        for(int i : chaves) {
-            a.inserir(i);
-            a.imprimirPreOrdem(a.raiz);
-            System.out.println();
-            //System.out.println("Imprimir em ordem:");
-            //a.imprimirEmOrdemComVersoes(a.raiz);
-        }
-        //no = a.buscarSucessor(10);
-        //System.out.println("Sucessor de 10: " + no);
-        System.out.println("\n" + a.quantidade + " nós.");
-        for(int i = -2; i < 20; i++) {
-            s = a.buscarSucessor(i);
-            System.out.println("Sucessor de " + i + ": " + s);
-        }
-        System.out.println("Removendo o nó 7.");
-        a.remover(7);
-        a.imprimirPreOrdem(a.raiz);
-        System.out.println();
-        a.imprimirEmOrdemComVersoes(a.raiz);
-    }
-
     public void testarImprimirEmOrdem(ArvoreRubroNegra a, int[] chaves) {
         for(int i : chaves) {
             a.inserir(i);
@@ -102,10 +80,27 @@ public class Principal {
         for (int i = 0; i < chaves.length + 1; i++) {
             System.out.print("Versão " + i + ": ");
             for(int j : chaves) {
-                String s = a.buscarSucessor(i, j);
+                String s = a.buscarSucessor(j, i);
                 System.out.print(j + " -> " + s + ", ");
             }    
             System.out.println();
+        }
+    }
+
+    static void testarRemocao(ArvoreRubroNegra a, int[] chaves) {
+        for(int i = chaves.length - 1; i >=0; i--) {
+            a.remover(chaves[i]);
+            String s = a.imprimirPreOrdem(a.raiz);
+            /*if (!s.equals(arvoreInsercoesPreOrdem[i])) {
+                throw new RuntimeException("Erro no resultado da inserção da chave " + chaves[i]);
+            }*/
+            System.out.println(s);
+            
+            /*System.out.print("Em ordem: ");
+            s = a.imprimirEmOrdem(a.raiz);
+            System.out.println(s);*/
+
+            //System.out.println("Total de nós: " + a.quantidade);
         }
     }
 

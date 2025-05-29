@@ -206,8 +206,10 @@ public class ArvoreRubroNegra {
             corOriginal = y.cor;
             x = y.dir;//Guarda para consertar a árvore a partir desse nó.
             if (y.pai == z) {
-                x.pai = y; //???
-                configurarVersao(x);
+                if (x != null) {
+                    x.pai = y; //???
+                    configurarVersao(x);
+                }
             } else {
                 transplantar(y, y.dir);
                 y.dir = z.dir;
@@ -340,74 +342,14 @@ public class ArvoreRubroNegra {
             n = novoNo;
         }
     }
-
+    
     /**
-     * Procura pelo elemento de menor chave na subárvore em que "no" é a raiz
-     * @param no
-     * @return
+     * Busca o sucessor da "chave" na versão indicada.
+     * @param chave
+     * @param versao
+     * @return O sucessor da chave solicitada.
      */
-    public Node buscarMinimoNaSubArvore(Node no) {
-        if (no == null)
-            return null;
-        Node min = no;
-        while (min.esq != null) {
-            min = min.esq;
-        }
-        return min;
-    }
-
-    public Node buscarMaximoNaSubArvore(Node no) {
-        if (no == null)
-            return null;
-        Node max = no;
-        while (max.dir != null) {
-            max = max.dir;
-        }
-        return max;
-    }
-
-    public Node buscarMaximoNaSubArvore(int versao, Node no) {
-        if (no == null)
-            return null;
-        Node max = no;
-            /*Node max = pegarVersao(versao, no);
-        if (max == null)
-            return null;*/
-        Node max_dir = pegarVersao(versao, max.dir);
-        while (max_dir != null) {
-            max = max_dir;
-            if (max != null) {
-                max_dir = pegarVersao(versao, max.dir);
-            }
-        }
-        return max;
-    }
-
-    public String buscarSucessor(int chave) {
-        Node x = raiz;
-        Node suc = null;
-        while (suc == null && x != null) {
-            Node y = buscarMaximoNaSubArvore(x.esq);
-            if (y != null && y.chave > chave) {
-                //Caminha na subárvore à esquerda.
-                x = x.esq;
-            } else if (x.chave > chave) {
-                suc = x;
-            } else {
-                //Caminha na subárvore à direita.
-                x = x.dir;
-            }
-        }
-        String retorno = "";
-        if (suc == null) {
-            retorno = "INFINITO";
-        } else {
-            retorno = suc.chave + ""; 
-        }
-        return retorno;
-    }
-
-    public String buscarSucessor(int versao, int chave) {
+    public String buscarSucessor(int chave, int versao) {
         if (versao > versaoAtual) {
             versao = versaoAtual;
         }
@@ -436,6 +378,28 @@ public class ArvoreRubroNegra {
         return retorno;
     }
 
+    public Node buscarMaximoNaSubArvore(int versao, Node no) {
+        if (no == null)
+            return null;
+        Node max = no;
+            /*Node max = pegarVersao(versao, no);
+        if (max == null)
+            return null;*/
+        Node max_dir = pegarVersao(versao, max.dir);
+        while (max_dir != null) {
+            max = max_dir;
+            if (max != null) {
+                max_dir = pegarVersao(versao, max.dir);
+            }
+        }
+        return max;
+    }
+    
+    /**
+     * Procura pelo nó que tem a chave indicada.
+     * @param chave
+     * @return
+     */
     public Node buscar(int chave) {
         Node x = raiz;
         while (x != null) {
@@ -450,36 +414,29 @@ public class ArvoreRubroNegra {
         return x;
     }
 
-    public String imprimirPreOrdem(Node no) {
-        String s = "";
-        if(no != null) {
-            s += ("(" + no.chave + no.cor.name().toLowerCase().charAt(0));
-            s += imprimirPreOrdem(no.esq);
-            s += imprimirPreOrdem(no.dir);
-            s += (")");
+    /**
+     * Procura pelo elemento de menor chave na subárvore em que "no" é a raiz
+     * @param no
+     * @return
+     */
+    public Node buscarMinimoNaSubArvore(Node no) {
+        if (no == null)
+            return null;
+        Node min = no;
+        while (min.esq != null) {
+            min = min.esq;
         }
-        return s;
+        return min;
     }
 
-    public String imprimirEmOrdem(Node no) {
-        return imprimirEmOrdem(no, 0);
-    }    
-
-    private String imprimirEmOrdem(Node no, int prof) {
-        String s = "";
-        if(no != null) {
-            if (no.pai == null) {
-                no.profundidade = 0;
-                prof = 0;
-            } else {
-                prof++;
-                no.profundidade = prof;
-            }
-            s += imprimirEmOrdem(no.esq, prof);
-            s += (no.chave + "," + no.profundidade + "," + no.cor.name().charAt(0) + " ");
-            s += imprimirEmOrdem(no.dir, prof);
+    public Node buscarMaximoNaSubArvore(Node no) {
+        if (no == null)
+            return null;
+        Node max = no;
+        while (max.dir != null) {
+            max = max.dir;
         }
-        return s;
+        return max;
     }
 
     public String imprimirEmOrdem(int versao) {
@@ -515,6 +472,23 @@ public class ArvoreRubroNegra {
         return s;
     }
 
+    public Node pegarVersao(int versao, Node no) {
+        Node noVerificar = no;
+        Node noDaVersao = null;
+        while (noVerificar != null && noDaVersao == null) {
+            for(int i = noVerificar.mods.length - 1; i >= 0; i--) {
+                if (noVerificar.mods[i] != null && versao >= noVerificar.mods[i].versao) {
+                    noDaVersao = noVerificar.mods[i].noNaVersao;
+                    break;
+                }
+            }
+            noVerificar = noVerificar.versaoAnterior;
+        }
+        return noDaVersao;
+    }
+
+    /***** Métodos utilziados nos testes da árvore ***** */
+    /* ************************************************* */
     public void imprimirEmOrdemComVersoes(Node no) {
         if(no != null) {
             if (no.pai != null) {
@@ -548,18 +522,61 @@ public class ArvoreRubroNegra {
         }
     }
 
-    public Node pegarVersao(int versao, Node no) {
-        Node noVerificar = no;
-        Node noDaVersao = null;
-        while (noVerificar != null && noDaVersao == null) {
-            for(int i = noVerificar.mods.length - 1; i >= 0; i--) {
-                if (noVerificar.mods[i] != null && versao >= noVerificar.mods[i].versao) {
-                    noDaVersao = noVerificar.mods[i].noNaVersao;
-                    break;
-                }
+    /***** Métodos comuns para a Árvore Rubro Negra sem persistência parcial *****/
+    /* ************************************************* */
+    public String buscarSucessor(int chave) {
+        Node x = raiz;
+        Node suc = null;
+        while (suc == null && x != null) {
+            Node y = buscarMaximoNaSubArvore(x.esq);
+            if (y != null && y.chave > chave) {
+                //Caminha na subárvore à esquerda.
+                x = x.esq;
+            } else if (x.chave > chave) {
+                suc = x;
+            } else {
+                //Caminha na subárvore à direita.
+                x = x.dir;
             }
-            noVerificar = noVerificar.versaoAnterior;
         }
-        return noDaVersao;
+        String retorno = "";
+        if (suc == null) {
+            retorno = "INFINITO";
+        } else {
+            retorno = suc.chave + ""; 
+        }
+        return retorno;
+    }
+
+    public String imprimirPreOrdem(Node no) {
+        String s = "";
+        if(no != null) {
+            s += ("(" + no.chave + no.cor.name().toLowerCase().charAt(0));
+            s += imprimirPreOrdem(no.esq);
+            s += imprimirPreOrdem(no.dir);
+            s += (")");
+        }
+        return s;
+    }
+
+    public String imprimirEmOrdem(Node no) {
+        return imprimirEmOrdem(no, 0);
+    }    
+
+    private String imprimirEmOrdem(Node no, int prof) {
+        String s = "";
+        if(no != null) {
+            if (no.pai == null) {
+                no.profundidade = 0;
+                prof = 0;
+            } else {
+                prof++;
+                no.profundidade = prof;
+            }
+            s += imprimirEmOrdem(no.esq, prof);
+            s += (no.chave + "," + no.profundidade + "," + no.cor.name().charAt(0) + " ");
+            s += imprimirEmOrdem(no.dir, prof);
+        }
+        return s;
     }
 }
