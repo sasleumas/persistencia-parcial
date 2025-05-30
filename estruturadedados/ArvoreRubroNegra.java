@@ -57,24 +57,22 @@ public class ArvoreRubroNegra {
         while (z.pai != null && z.pai.cor.equals(Cor.Rubro)) {
             if (z.pai == z.pai.pai.esq) {
                 Node y = z.pai.pai.dir;
-                //Se o irmão do pai é rubro ou não existe, 
-                // o pai e o tio (se existir) podem ser mudados para negros 
-                if (y == null || y.cor.equals(Cor.Rubro)) {
+                if (y != null && y.cor.equals(Cor.Rubro)) {
                     z.pai.cor = Cor.Negro;
                     configurarVersao(z.pai);
                     //nosModificados.add(z.pai);
-                    if (y != null) {
-                        y.cor = Cor.Negro;
-                        configurarVersao(y);
-                        //nosModificados.add(y);
-                    }
+                    y.cor = Cor.Negro;
+                    configurarVersao(y);
+                    //nosModificados.add(y);
                     z.pai.pai.cor = Cor.Rubro;
                     configurarVersao(z.pai.pai);
                     //nosModificados.add(z.pai.pai);
                     z = z.pai.pai;
-                } else if (z == z.pai.dir) {
-                    z = z.pai;                    
-                    rotacionarAEsquerda(z);
+                } else {
+                    if (z == z.pai.dir) {
+                        z = z.pai;                    
+                        rotacionarAEsquerda(z);
+                    }
                     z.pai.cor = Cor.Negro;
                     z.pai.pai.cor = Cor.Rubro;
                     configurarVersao(z.pai);
@@ -87,22 +85,22 @@ public class ArvoreRubroNegra {
                 Node y = z.pai.pai.esq;
                 //Se o irmão do pai é rubro ou não existe, 
                 // o pai e o irmão (se existir) podem ser mudados para negros
-                if (y == null || y.cor.equals(Cor.Rubro)) {
+                if (y != null && y.cor.equals(Cor.Rubro)) {
                     z.pai.cor = Cor.Negro;
                     configurarVersao(z.pai);
                     //nosModificados.add(z.pai);
-                    if (y != null) {
-                        y.cor = Cor.Negro;
-                        configurarVersao(y);
-                        //nosModificados.add(y);
-                    }
+                    y.cor = Cor.Negro;
+                    configurarVersao(y);
+                    //nosModificados.add(y);
                     z.pai.pai.cor = Cor.Rubro;
                     configurarVersao(z.pai.pai);
                     //nosModificados.add(z.pai.pai);
                     z = z.pai.pai;
-                } else if (z == z.pai.esq) {
-                    z = z.pai;
-                    rotacionarADireita(z);
+                } else {
+                    if (z == z.pai.esq) {
+                        z = z.pai;
+                        rotacionarADireita(z);
+                    }
                     z.pai.cor = Cor.Negro;
                     z.pai.pai.cor = Cor.Rubro;
                     configurarVersao(z.pai);
@@ -189,9 +187,11 @@ public class ArvoreRubroNegra {
     public void remover(int chave) {
         //nosModificados.clear();        
         Node z = buscar(chave);
-        if (z == null)
-            return;
         versaoAtual++;
+        if (z == null) {
+            raizesDasVersoes.put(versaoAtual, raiz);
+            return;
+        }
         Node y = z;
         Node x = null;
         Cor corOriginal = y.cor;
@@ -202,31 +202,36 @@ public class ArvoreRubroNegra {
             x = z.esq; //Guarda para consertar a árvore a partir desse nó.
             transplantar(z, z.esq);
         } else {
+            //Escolhe o menor da direita para ser a nova raiz da subárvore.
             y = buscarMinimoNaSubArvore(z.dir);
             corOriginal = y.cor;
             x = y.dir;//Guarda para consertar a árvore a partir desse nó.
-            if (y.pai == z) {
-                if (x != null) {
-                    x.pai = y; //???
-                    configurarVersao(x);
-                }
+            if (y.pai == z && x != null) {
+                x.pai = y;
+                configurarVersao(x);
             } else {
                 transplantar(y, y.dir);
                 y.dir = z.dir;
-                y.dir.pai = y;
                 configurarVersao(y);
-                configurarVersao(y.dir);
+                if (y.dir != null) {
+                    y.dir.pai = y;
+                    configurarVersao(y.dir);
+                }
             }
             transplantar(z, y);
 
             y.esq = z.esq;
-            y.esq.pai = y;
             y.cor = z.cor;
             configurarVersao(y);
-            configurarVersao(y.esq);
+            if (y.esq != null) {
+                y.esq.pai = y;
+                configurarVersao(y.esq);
+            }
         }
-        if (x != null && corOriginal.equals(Cor.Negro)) {
-            consertarDelete(x);
+        if (corOriginal.equals(Cor.Negro)) {
+
+            if (x != null)
+                consertarDelete(x);
         }
         quantidade--;
         raizesDasVersoes.put(versaoAtual, raiz);
@@ -250,17 +255,28 @@ public class ArvoreRubroNegra {
                     rotacionarAEsquerda(x.pai);
                     w = x.pai.dir;
                 }
-                if (w.esq.cor.equals(Cor.Negro) && w.dir.cor.equals(Cor.Negro)) {
+                if ((w.esq == null ||  w.esq.cor.equals(Cor.Negro)) && (w.dir == null || w.dir.cor.equals(Cor.Negro))) {
                     w.cor = Cor.Rubro;
                     configurarVersao(w);
                     x = x.pai;
-                } else if (w.dir.cor.equals(Cor.Negro)) {
-                    w.esq.cor = Cor.Negro;
-                    configurarVersao(w.esq);
-                    w.cor = Cor.Rubro;
+                } else {
+                    if (w.dir.cor.equals(Cor.Negro)) {
+                        w.esq.cor = Cor.Negro;
+                        configurarVersao(w.esq);
+                        w.cor = Cor.Rubro;
+                        configurarVersao(w);
+                        rotacionarADireita(w);
+                        w = x.pai.dir;
+                        configurarVersao(w);
+                    }
+                    w.cor = x.pai.cor;
                     configurarVersao(w);
-                    rotacionarADireita(w);
-                    w = x.pai.dir;
+                    x.pai.cor = Cor.Negro;
+                    configurarVersao(x.pai);
+                    w.dir.cor = Cor.Negro;
+                    configurarVersao(w.dir);
+                    rotacionarAEsquerda(x.pai);
+                    x = raiz;
                 }
             } else { // faz do outro lado da árvore (de forma inversa).
                 w = x.pai.esq;
@@ -272,22 +288,34 @@ public class ArvoreRubroNegra {
                     rotacionarADireita(x.pai);
                     w = x.pai.esq;
                 }
-                if (w.dir.cor.equals(Cor.Negro) && w.esq.cor.equals(Cor.Negro)) {
+                if ((w.dir == null || w.dir.cor.equals(Cor.Negro)) && (w.esq == null || w.esq.cor.equals(Cor.Negro))) {
                     w.cor = Cor.Rubro;
                     configurarVersao(w);
                     x = x.pai;
-                } else if (w.esq.cor.equals(Cor.Negro)) {
-                    w.dir.cor = Cor.Negro;
-                    configurarVersao(w.dir);
-                    w.cor = Cor.Rubro;
+                } else {
+                    if (w.esq.cor.equals(Cor.Negro)) {
+                        w.dir.cor = Cor.Negro;
+                        configurarVersao(w.dir);
+                        w.cor = Cor.Rubro;
+                        configurarVersao(w);
+                        rotacionarAEsquerda(w);
+                        w = x.pai.esq;
+                    }
+                    w.cor = x.pai.cor;
                     configurarVersao(w);
-                    rotacionarAEsquerda(w);
-                    w = x.pai.esq;
+                    x.pai.cor = Cor.Negro;
+                    configurarVersao(x.pai);
+                    w.esq.cor = Cor.Negro;
+                    configurarVersao(w.esq);
+                    rotacionarADireita(x.pai);
+                    x = raiz;
                 }
             }
         }
-        x.cor = Cor.Negro;
-        configurarVersao(x);
+        if (x != null && x == raiz) {
+            x.cor = Cor.Negro;
+            configurarVersao(x);
+        }
     }
 
     /**

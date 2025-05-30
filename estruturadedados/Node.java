@@ -37,10 +37,7 @@ public class Node {
                 boolean configura = true;
                 if (i > 0) {
                     Node anterior = mods[i-1].noNaVersao;
-                    if (ehMesmaChave(anterior.esq, this.esq) &&
-                        ehMesmaChave(anterior.dir, this.dir) &&
-                        ehMesmaChave(anterior.pai, this.pai) &&
-                        anterior.cor.ordinal() == this.cor.ordinal()) {
+                    if (ehIgualModAnterior(anterior, this)) {
                         configura = false;
                     }
                 }
@@ -54,13 +51,18 @@ public class Node {
         //Se chegou aqui, não há mais espaço para inserir modificação.
         //Verifica se houve modificação que justifique necessidade de informar estouro. 
         Node ultima = mods[mods.length-1].noNaVersao;
-        if (ehMesmaChave(ultima.esq, this.esq) &&
-            ehMesmaChave(ultima.dir, this.dir) &&
-            ehMesmaChave(ultima.pai, this.pai) &&
-            ultima.cor.ordinal() == this.cor.ordinal()) {
+        if (ehIgualModAnterior(ultima, this)) {
             return true;
         }
         return false;
+    }
+
+    private boolean ehIgualModAnterior(Node ant, Node atual) {
+        boolean compara = ehMesmaChave(ant.esq, atual.esq) &&
+            ehMesmaChave(ant.dir, atual.dir) &&
+            ehMesmaChave(ant.pai, atual.pai) &&
+            ant.cor.ordinal() == atual.cor.ordinal();
+        return compara;
     }
 
     private boolean ehMesmaChave(Node n1, Node n2) {

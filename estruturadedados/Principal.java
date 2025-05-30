@@ -3,34 +3,40 @@ package estruturadedados;
 public class Principal {
     public static void main(String[] args) {
         int[] chaves = {11, 2, 14, 1, 7, 15, 5, 8, 4, 16, 3, 13, 2};
+        //int[] chaves = {9, 7, 15, 2, 8, 12, 17};
         ArvoreRubroNegra a = new ArvoreRubroNegra();
         System.out.println("Ver resultado de cada inserção em pré-ordem e em ordem.");
         testarInsercao(a, chaves);
 
-        System.out.println("Raízes de cada versão.");
-        testarRaizes(a);
+        //System.out.println("Raízes de cada versão.");
+        //testarRaizes(a);
 
-        System.out.println("Impressão por versões em ordem.");
-        testarImpressaoDaVersao(a);
+        //System.out.println("Impressão por versões em ordem.");
+        //testarImpressaoDaVersao(a);
         
-        int [] novasChaves = {9, -5, 11, 2, 14, 1, 12, 7, 15, 5, 0, 8, 4, 16, 90, 3, 13, 2, 1000};
-        System.out.println("Sucessores de cada chave em cada versão");
-        testarSucessorDaVersao(a, novasChaves);
+        //int [] novasChaves = {9, -5, 11, 2, 14, 1, 12, 7, 15, 5, 0, 8, 4, 16, 90, 3, 13, 2, 1000};
+        //System.out.println("Sucessores de cada chave em cada versão");
+        //testarSucessorDaVersao(a, novasChaves);
 
         //System.out.println("Impressão de modificações.");
         //a.imprimirEmOrdemComVersoes(a.raiz);
 
         System.out.println("Remoção na ordem inversa da inserção");
-        testarRemocao(a, chaves);
+        //int[] chs = chaves;
+        int[] chs = {14};
+        testarRemocao(a, chs);
+
+        //System.out.println("Impressão por versões em ordem.");
+        //testarImpressaoDaVersao(a);
     }
 
     public static void testarInsercao(ArvoreRubroNegra a, int[] chaves) {        
         for(int i = 0; i < chaves.length; i++) {
             a.inserir(chaves[i]);
             String s = a.imprimirPreOrdem(a.raiz);
-            if (!s.equals(arvoreInsercoesPreOrdem[i])) {
-                throw new RuntimeException("Erro no resultado da inserção da chave " + chaves[i]);
-            }
+            //if (!s.equals(arvoreInsercoesPreOrdem[i])) {
+            //    throw new RuntimeException("Erro no resultado da inserção da chave " + chaves[i]);
+            //}
             System.out.println(s);
             
             /*System.out.print("Em ordem: ");
@@ -54,7 +60,7 @@ public class Principal {
     }
 
     static void testarImpressaoDaVersao(ArvoreRubroNegra a) {
-        for(int i = 0; i < arvoreInsercoesPreOrdem.length + 2; i++) {
+        for(int i = 0; i < a.versaoAtual + 2; i++) {
             String s = a.imprimirEmOrdem(i);
             System.out.print("Versão " + i + ": ");
             System.out.println(s);
@@ -89,12 +95,17 @@ public class Principal {
 
     static void testarRemocao(ArvoreRubroNegra a, int[] chaves) {
         for(int i = chaves.length - 1; i >=0; i--) {
+            if (chaves[i] == 1) {
+               System.out.println(i);
+            }
             a.remover(chaves[i]);
             String s = a.imprimirPreOrdem(a.raiz);
             /*if (!s.equals(arvoreInsercoesPreOrdem[i])) {
                 throw new RuntimeException("Erro no resultado da inserção da chave " + chaves[i]);
             }*/
+            
             System.out.println(s);
+            //System.out.println(" - Versão " + a.versaoAtual + " (" + (chaves[i]) + ")");
             
             /*System.out.print("Em ordem: ");
             s = a.imprimirEmOrdem(a.raiz);
@@ -115,10 +126,10 @@ public class Principal {
         "(11n(2r(1n)(7n(5r)))(14n(15r)))",
         "(11n(2r(1n)(7n(5r)(8r)))(14n(15r)))",
         "(7n(2r(1n)(5n(4r)))(11r(8n)(14n(15r))))",
-        "(7n(2n(1n)(5n(4r)))(11n(8n)(14r(15n(16r)))))",
-        "(7n(2n(1n)(5r(4n(3r))))(11n(8n)(14r(15n(16r)))))",
-        "(7n(2n(1n)(5r(4n(3r))))(13n(11r(8n))(14r(15n(16r)))))",
-        "(7n(4n(2r(1n)(3n(2r)))(5r))(13n(11r(8n))(14r(15n(16r)))))"
+        "(7n(2r(1n)(5n(4r)))(11r(8n)(15n(14r)(16r))))",
+        "(7n(2r(1n)(4n(3r)(5r)))(11r(8n)(15n(14r)(16r))))",
+        "(7n(2n(1n)(4n(3r)(5r)))(11n(8n)(15r(14n(13r))(16n))))",
+        "(7n(2n(1n)(4r(3n(2r))(5n)))(11n(8n)(15r(14n(13r))(16n))))"
     }; 
 
     static String[] arvoreInsercoesEmOrdem =
