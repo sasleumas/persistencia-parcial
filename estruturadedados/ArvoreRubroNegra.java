@@ -6,9 +6,6 @@ public class ArvoreRubroNegra {
     Node raiz = null;
     int quantidade = 0;
     int versaoAtual = 0;
-    //Mantém uma lista com os nós modificados na última inserção ou remoção
-    // para atualização dos mods da versão de cada nó. 
-    //private HashSet<Node> nosModificados = new HashSet<>();
 
     HashMap<Integer, Node> raizesDasVersoes = new HashMap<>();
 

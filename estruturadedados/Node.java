@@ -1,7 +1,6 @@
 package estruturadedados;
 
 public class Node {
-    
     Node pai = null;
     Node esq = null;
     Node dir = null;
